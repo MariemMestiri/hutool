@@ -1,0 +1,28 @@
+on:
+  push:
+    branches:
+      "v5-master"
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+    - name: Set up Java
+      uses: actions/setup-java@v4
+      with:
+        java-version: '8'
+        distribution: 'temurin'
+    - name: Cache overflow
+      uses: actions/cache@v3
+      with:
+          key: ${{ runner.os }}-m2
+          path: $HOME/.m2
+    - name:  Cobertura Script
+      run: |
+        export TZ=Asia/Shanghai
+        mvn install -DskipTests=true -Dmaven.javadoc.skip=true -B -V
+        mvn cobertura:cobertura -Dcobertura.report.format=xml -Dmaven.javadoc.skip=true
+    - name: Curl
+      if: ${{ success() }}
+      run: bash <(curl -s https://codecov.io/bash)
